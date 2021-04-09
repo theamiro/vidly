@@ -15,6 +15,9 @@ app.use(helmet())
 const customers = require("./routes/customers")
 app.use("/api/customers", customers)
 
+const genres = require("./routes/genres")
+app.use("/api/genres", genres)
+
 if (process.env.ENV === "development") {
 	app.use(morgan("tiny"))
 	debug("Running in developement")
