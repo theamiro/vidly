@@ -22,6 +22,8 @@ const genreSchema = mongoose.Schema({
 	name: {
 		type: String,
 		required: true,
+		minLength: 4,
+		maxLength: 20,
 	},
 	description: {
 		type: String,
