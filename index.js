@@ -36,6 +36,9 @@ app.use("/api/movies", movies)
 const rentals = require("./routes/rentals")
 app.use("/api/rentals", rentals)
 
+const users = require("./routes/auth/users")
+app.use("/api/users", users)
+
 if (process.env.ENV === "development") {
 	app.use(morgan("tiny"))
 	debug("Running in developement")
