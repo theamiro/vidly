@@ -118,10 +118,7 @@ async function updateGenre(id, body) {
 		const genre = await Genre.findByIdAndUpdate(
 			id,
 			{
-				$set: {
-					name: body.name,
-					description: body.description,
-				},
+				$set: body,
 			},
 			{
 				new: true,

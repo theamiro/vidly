@@ -131,11 +131,7 @@ async function updateCustomer(id, body) {
 		const customer = Customer.findByIdAndUpdate(
 			id,
 			{
-				$set: {
-					name: body.name,
-					isGold: body.isGold,
-					phone: body.phone,
-				},
+				$set: body,
 			},
 			{
 				new: true,
