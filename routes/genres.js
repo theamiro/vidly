@@ -57,7 +57,7 @@ router.post("/", (request, response) => {
 			response.send(error)
 		})
 })
-router.put("/:id", (request, response) => {
+router.patch("/:id", (request, response) => {
 	updateGenre(request.params.id, request.body)
 		.then((genres) => {
 			response.send({
