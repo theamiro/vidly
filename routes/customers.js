@@ -67,7 +67,7 @@ router.post("/", (request, response) => {
 		})
 })
 
-router.put("/:id", (request, response) => {
+router.patch("/:id", (request, response) => {
 	updateCustomer(request.params.id, request.body)
 		.then((result) => {
 			response.send({
