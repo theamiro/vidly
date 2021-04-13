@@ -3,6 +3,7 @@ const router = express.Router()
 const debug = require("debug")("app:startup")
 // const Joi = require("joi")
 const mongoose = require("mongoose")
+const Customer = require("../models/Customer")
 
 router.use(express.json())
 
@@ -18,27 +19,6 @@ mongoose
 		debug("Failed to connect to Mongo...", error)
 	})
 
-const customerSchema = mongoose.Schema({
-	name: {
-		type: "string",
-		required: true,
-		minLength: 2,
-		maxLength: 50,
-	},
-	isGold: {
-		type: "boolean",
-		required: true,
-	},
-	phone: {
-		type: "string",
-		required: true,
-		minLength: 10,
-		maxLength: 13,
-	},
-})
-
-const Customer = mongoose.model("Customer", customerSchema)
-
 router.get("/", (request, response) => {
 	getCustomers()
 		.then((customers) => {
@@ -50,6 +30,20 @@ router.get("/", (request, response) => {
 		})
 		.catch((error) => {
 			response.send(error)
+		})
+})
+
+router.get("/:id", (request, response) => {
+	getCustomerByID(request.params.id)
+		.then((customers) => {
+			response.send({
+				status: 200,
+				message: "Fetched customer successfully",
+				customers: customers,
+			})
+		})
+		.catch((error) => {
+			response.status(404).send(error)
 		})
 })
 
@@ -77,7 +71,7 @@ router.patch("/:id", (request, response) => {
 			})
 		})
 		.catch((error) => {
-			response.send(error)
+			response.status(404).send(error)
 		})
 })
 
@@ -102,6 +96,19 @@ async function getCustomers() {
 			return Promise.resolve(customers)
 		} else {
 			return Promise.reject(new Error("Couldn't find any customers'"))
+		}
+	} catch (error) {
+		return Promise.reject(error)
+	}
+}
+
+async function getCustomerByID(id) {
+	try {
+		const customers = await Customer.findById(id)
+		if (customers) {
+			return Promise.resolve(customers)
+		} else {
+			return new Error(`Couldn't find the customer with the ID ${id}`)
 		}
 	} catch (error) {
 		return Promise.reject(error)

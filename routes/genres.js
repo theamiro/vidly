@@ -3,6 +3,7 @@ const router = express.Router()
 const debug = require("debug")("app:startup")
 // const Joi = require("Joi")
 const mongoose = require("mongoose")
+const Genre = require("../models/Genre")
 
 router.use(express.json())
 
@@ -18,32 +19,33 @@ mongoose
 		debug("Failed to connect to Mongo...", error)
 	})
 
-const genreSchema = mongoose.Schema({
-	name: {
-		type: String,
-		required: true,
-		minLength: 4,
-		maxLength: 20,
-	},
-	description: {
-		type: String,
-	},
-})
-const Genre = mongoose.model("Genre", genreSchema)
-
 router.get("/", (request, response) => {
 	getGenres()
 		.then((genres) => {
 			response.send({
 				status: 200,
 				message: "Fetched genres successfully",
-				customers: genres,
+				genres: genres,
 			})
 		})
 		.catch((error) => {
 			response.send(error)
 		})
 })
+router.get("/:id", (request, response) => {
+	getGenreByID(request.params.id)
+		.then((genres) => {
+			response.send({
+				status: 200,
+				message: "Fetched genres successfully",
+				genre: genres,
+			})
+		})
+		.catch((error) => {
+			response.send(error)
+		})
+})
+
 router.post("/", (request, response) => {
 	createGenre(request.body)
 		.then((genres) => {
@@ -92,6 +94,20 @@ async function getGenres() {
 			return Promise.resolve(genres)
 		} else {
 			return Promise.reject(new Error("No genres found"))
+		}
+	} catch (error) {
+		return Promise.reject(error)
+	}
+}
+async function getGenreByID(id) {
+	try {
+		const genre = await Genre.findById(id)
+		if (genre) {
+			return Promise.resolve(genre)
+		} else {
+			return Promise.reject(
+				new Error(`Couldn't find the genre with the ID ${id}`)
+			)
 		}
 	} catch (error) {
 		return Promise.reject(error)
