@@ -1,17 +1,18 @@
 const express = require("express")
 const router = express.Router()
 const debug = require("debug")("app:startup")
+const Movie = require("../models/Movie")
 const Genre = require("../models/Genre")
 
 router.use(express.json())
 
 router.get("/", (request, response) => {
-	getGenres()
-		.then((genres) => {
+	getMovies()
+		.then((movies) => {
 			response.send({
 				status: 200,
-				message: "Fetched genres successfully",
-				genres: genres,
+				message: "Fetched movies successfully",
+				movies: movies,
 			})
 		})
 		.catch((error) => {
@@ -19,12 +20,12 @@ router.get("/", (request, response) => {
 		})
 })
 router.get("/:id", (request, response) => {
-	getGenreByID(request.params.id)
-		.then((genres) => {
+	getMovieByID(request.params.id)
+		.then((movie) => {
 			response.send({
 				status: 200,
-				message: "Fetched genres successfully",
-				genre: genres,
+				message: "Fetched movies successfully",
+				movie: movie,
 			})
 		})
 		.catch((error) => {
@@ -33,12 +34,12 @@ router.get("/:id", (request, response) => {
 })
 
 router.post("/", (request, response) => {
-	createGenre(request.body)
-		.then((genres) => {
+	createMovie(request.body)
+		.then((movie) => {
 			response.send({
 				status: 200,
 				message: "Created genre successfully",
-				genres: genres,
+				movie: movie,
 			})
 		})
 		.catch((error) => {
@@ -46,12 +47,12 @@ router.post("/", (request, response) => {
 		})
 })
 router.patch("/:id", (request, response) => {
-	updateGenre(request.params.id, request.body)
-		.then((genres) => {
+	updateMovie(request.params.id, request.body)
+		.then((movie) => {
 			response.send({
 				status: 200,
 				message: "Updated genre successfully",
-				genres: genres,
+				movie: movie,
 			})
 		})
 		.catch((error) => {
@@ -60,12 +61,12 @@ router.patch("/:id", (request, response) => {
 })
 
 router.delete("/:id", (request, response) => {
-	deleteGenre(request.params.id)
-		.then((genre) => {
+	deleteMovie(request.params.id)
+		.then((movie) => {
 			response.send({
 				status: 200,
 				message: "Deleted genre successfully",
-				genre: genre,
+				movie: movie,
 			})
 		})
 		.catch((error) => {
@@ -73,11 +74,11 @@ router.delete("/:id", (request, response) => {
 		})
 })
 
-async function getGenres() {
+async function getMovies() {
 	try {
-		const genres = await Genre.find()
-		if (genres.length) {
-			return Promise.resolve(genres)
+		const movies = await Movie.find()
+		if (movies.length) {
+			return Promise.resolve(movies)
 		} else {
 			return Promise.reject(new Error("No genres found"))
 		}
@@ -85,11 +86,11 @@ async function getGenres() {
 		return Promise.reject(error)
 	}
 }
-async function getGenreByID(id) {
+async function getMovieByID(id) {
 	try {
-		const genre = await Genre.findById(id)
-		if (genre) {
-			return Promise.resolve(genre)
+		const movie = await Movie.findById(id)
+		if (movie) {
+			return Promise.resolve(movie)
 		} else {
 			return Promise.reject(`Couldn't find the genre with the ID ${id}`)
 		}
@@ -97,13 +98,23 @@ async function getGenreByID(id) {
 		return Promise.reject(error)
 	}
 }
-async function createGenre(body) {
+async function createMovie(body) {
 	try {
-		const newGenre = Genre({
-			name: body.name,
-			description: body.description,
+		const genre = await Genre.findById(body.genreID)
+		if (!genre) {
+			return Promise.reject(new Error("Genre does not exist"))
+		}
+		const movie = Movie({
+			title: body.title,
+			year: body.year,
+			genre: {
+				id: genre.id,
+				name: genre.name,
+			},
+			numberInStock: body.numberInStock,
+			dailyRentalRate: body.dailyRentalRate,
 		})
-		const result = await newGenre.save()
+		const result = await movie.save()
 		if (result) {
 			return Promise.resolve(result)
 		} else {
@@ -113,9 +124,9 @@ async function createGenre(body) {
 		return Promise.reject(error)
 	}
 }
-async function updateGenre(id, body) {
+async function updateMovie(id, body) {
 	try {
-		const genre = await Genre.findByIdAndUpdate(
+		const movie = await Movie.findByIdAndUpdate(
 			id,
 			{
 				$set: body,
@@ -124,8 +135,8 @@ async function updateGenre(id, body) {
 				new: true,
 			}
 		)
-		if (genre) {
-			return Promise.resolve(genre)
+		if (movie) {
+			return Promise.resolve(movie)
 		} else {
 			return Promise.reject(new Error("Failed to update Genre"))
 		}
@@ -133,11 +144,11 @@ async function updateGenre(id, body) {
 		return Promise.reject(error)
 	}
 }
-async function deleteGenre(id) {
+async function deleteMovie(id) {
 	try {
-		const genre = await Genre.findByIdAndDelete(id)
-		if (genre) {
-			return Promise.resolve(genre)
+		const movie = await Movie.findByIdAndDelete(id)
+		if (movie) {
+			return Promise.resolve(movie)
 		} else {
 			return Promise.reject(new Error("Failed to delete Genre"))
 		}

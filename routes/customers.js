@@ -1,23 +1,9 @@
 const express = require("express")
 const router = express.Router()
 const debug = require("debug")("app:startup")
-// const Joi = require("joi")
-const mongoose = require("mongoose")
 const Customer = require("../models/Customer")
 
 router.use(express.json())
-
-mongoose
-	.connect(process.env.DB_URL, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-	})
-	.then(() => {
-		debug("Successfully connected to Mongo")
-	})
-	.catch((error) => {
-		debug("Failed to connect to Mongo...", error)
-	})
 
 router.get("/", (request, response) => {
 	getCustomers()
