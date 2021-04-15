@@ -1,3 +1,4 @@
+const auth = require("../middleware/auth")
 const express = require("express")
 const router = express.Router()
 const debug = require("debug")("app:startup")
@@ -6,155 +7,109 @@ const Genre = require("../models/Genre")
 
 router.use(express.json())
 
-router.get("/", (request, response) => {
-	getMovies()
-		.then((movies) => {
-			response.send({
-				status: 200,
-				message: "Fetched movies successfully",
-				movies: movies,
-			})
+router.get("/", async (request, response) => {
+	const movies = await Movie.find()
+	if (movies.length) {
+		response.status(200).send({
+			status: 200,
+			message: "Fetched movies successfully",
+			movies: movies,
 		})
-		.catch((error) => {
-			response.send(error)
+	} else {
+		response.status(404).send({
+			status: 404,
+			message: "Fetched movies successfully",
+			movies: movies,
 		})
+	}
 })
-router.get("/:id", (request, response) => {
-	getMovieByID(request.params.id)
-		.then((movie) => {
-			response.send({
-				status: 200,
-				message: "Fetched movies successfully",
-				movie: movie,
-			})
+router.get("/:id", async (request, response) => {
+	const movie = await Movie.findById(id)
+	if (movie) {
+		response.status(200).send({
+			status: 200,
+			message: "Fetched movie successfully",
+			movie: movie,
 		})
-		.catch((error) => {
-			response.send(error)
+	} else {
+		response.status(404).send({
+			status: 404,
+			message: "Movie with the ID not found",
+			movies: movies,
 		})
-})
-
-router.post("/", (request, response) => {
-	createMovie(request.body)
-		.then((movie) => {
-			response.send({
-				status: 200,
-				message: "Created genre successfully",
-				movie: movie,
-			})
-		})
-		.catch((error) => {
-			response.send(error)
-		})
-})
-router.patch("/:id", (request, response) => {
-	updateMovie(request.params.id, request.body)
-		.then((movie) => {
-			response.send({
-				status: 200,
-				message: "Updated genre successfully",
-				movie: movie,
-			})
-		})
-		.catch((error) => {
-			response.send(error)
-		})
+	}
 })
 
-router.delete("/:id", (request, response) => {
-	deleteMovie(request.params.id)
-		.then((movie) => {
-			response.send({
-				status: 200,
-				message: "Deleted genre successfully",
-				movie: movie,
-			})
+router.post("/", auth, async (request, response) => {
+	const genre = await Genre.findById(request.body.genreID)
+	if (!genre) {
+		return response.status(404).send({
+			status: 404,
+			message: "Movie with the ID not found",
 		})
-		.catch((error) => {
-			response.send(error)
+	}
+	const movie = Movie({
+		title: request.body.title,
+		year: request.body.year,
+		genre: {
+			id: genre.id,
+			name: genre.name,
+		},
+		numberInStock: request.body.numberInStock,
+		dailyRentalRate: request.body.dailyRentalRate,
+	})
+	const result = await movie.save()
+	if (result) {
+		response.status(201).send({
+			status: 201,
+			message: "Movie created successfully",
+			movie: result,
 		})
+	} else {
+		response.status(404).send({
+			status: 404,
+			message: "Failed to create movie",
+		})
+	}
+})
+router.patch("/:id", auth, async (request, response) => {
+	const movie = await Movie.findByIdAndUpdate(
+		request.params.id,
+		{
+			$set: request.body,
+		},
+		{
+			new: true,
+		}
+	)
+	if (movie) {
+		response.status(200).send({
+			status: 200,
+			message: "Movie updated successfully",
+			movie: result,
+		})
+	} else {
+		response.status(404).send({
+			status: 404,
+			message: "Failed to update movie",
+		})
+	}
 })
 
-async function getMovies() {
-	try {
-		const movies = await Movie.find()
-		if (movies.length) {
-			return Promise.resolve(movies)
-		} else {
-			return Promise.reject(new Error("No genres found"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-async function getMovieByID(id) {
-	try {
-		const movie = await Movie.findById(id)
-		if (movie) {
-			return Promise.resolve(movie)
-		} else {
-			return Promise.reject(`Couldn't find the genre with the ID ${id}`)
-		}
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-async function createMovie(body) {
-	try {
-		const genre = await Genre.findById(body.genreID)
-		if (!genre) {
-			return Promise.reject(new Error("Genre does not exist"))
-		}
-		const movie = Movie({
-			title: body.title,
-			year: body.year,
-			genre: {
-				id: genre.id,
-				name: genre.name,
-			},
-			numberInStock: body.numberInStock,
-			dailyRentalRate: body.dailyRentalRate,
+router.delete("/:id", auth, async (request, response) => {
+	const movie = await Movie.findByIdAndDelete(id)
+	if (movie) {
+		response.status(200).send({
+			status: 200,
+			message: "Movie deleted successfully",
+			movie: movie,
 		})
-		const result = await movie.save()
-		if (result) {
-			return Promise.resolve(result)
-		} else {
-			return Promise.reject(new Error("Failed to create Genre"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
+	} else {
+		response.status(404).send({
+			status: 404,
+			message: "Genre not found",
+		})
 	}
-}
-async function updateMovie(id, body) {
-	try {
-		const movie = await Movie.findByIdAndUpdate(
-			id,
-			{
-				$set: body,
-			},
-			{
-				new: true,
-			}
-		)
-		if (movie) {
-			return Promise.resolve(movie)
-		} else {
-			return Promise.reject(new Error("Failed to update Genre"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-async function deleteMovie(id) {
-	try {
-		const movie = await Movie.findByIdAndDelete(id)
-		if (movie) {
-			return Promise.resolve(movie)
-		} else {
-			return Promise.reject(new Error("Failed to delete Genre"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
+})
 
 module.exports = router

@@ -1,9 +1,12 @@
+require("express-async-errors")
 require("dotenv").config()
+const winston = require("winston")
 const mongoose = require("mongoose")
 const express = require("express")
 const morgan = require("morgan")
 const debug = require("debug")("app:startup")
 const helmet = require("helmet")
+const error = require("./middleware/error")
 // Routes
 const customers = require("./routes/customers")
 const genres = require("./routes/genres")
@@ -13,6 +16,8 @@ const users = require("./routes/auth/users")
 const auth = require("./routes/auth/auth")
 
 const app = express()
+
+winston.add(new winston.transports.File({filename: "logger.log"}))
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
@@ -37,6 +42,8 @@ app.use("/api/movies", movies)
 app.use("/api/rentals", rentals)
 app.use("/api/users", users)
 app.use("/api/auth", auth)
+
+app.use(error)
 
 if (process.env.ENV === "development") {
 	app.use(morgan("tiny"))
