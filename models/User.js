@@ -1,3 +1,5 @@
+require("dotenv").config()
+const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose")
 const {Schema, model} = mongoose
 
@@ -19,6 +21,13 @@ const userSchema = Schema({
 		required: true,
 	},
 })
+
+userSchema.methods.generateAuthToken = function () {
+	return jwt.sign(
+		{_id: this.id, name: this.name, email: this.email},
+		process.env.SECRET_KEY
+	)
+}
 
 const User = model("User", userSchema)
 
