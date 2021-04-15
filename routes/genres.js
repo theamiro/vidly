@@ -1,149 +1,108 @@
 const express = require("express")
 const router = express.Router()
 const debug = require("debug")("app:startup")
-// const Joi = require("Joi")
-const mongoose = require("mongoose")
+const Genre = require("../models/Genre")
+const auth = require("../middleware/auth")
 
 router.use(express.json())
 
-mongoose
-	.connect(process.env.DB_URL, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
+router.get("/", async (request, response) => {
+	const genres = await Genre.find()
+	if (genres.length) {
+		response.status(200).send({
+			status: 200,
+			message: "Genres found",
+			genres: genres,
+		})
+	} else {
+		response.status(404).send({
+			status: 404,
+			message: "Genres not found",
+		})
+	}
+})
+
+router.get("/:id", async (request, response) => {
+	const genre = await Genre.findById(request.params.id)
+	if (genre) {
+		response.status(200).send({
+			status: 200,
+			message: "Genre found",
+			genre: genre,
+		})
+	} else {
+		response.status(404).send({
+			status: 200,
+			message: "Genre not found",
+		})
+	}
+})
+
+router.post("/", auth, async (request, response) => {
+	var genre = await Genre.findOne({name: request.body.name})
+	if (genre) {
+		return response.status(400).send({
+			status: 400,
+			message: "Genre already exists",
+		})
+	}
+	genre = Genre({
+		name: request.body.name,
+		description: request.body.description,
 	})
-	.then(() => {
-		debug("Successfully connected to Mongo")
-	})
-	.catch((error) => {
-		debug("Failed to connect to Mongo...", error)
-	})
-
-const genreSchema = mongoose.Schema({
-	name: {
-		type: String,
-		required: true,
-		minLength: 4,
-		maxLength: 20,
-	},
-	description: {
-		type: String,
-	},
-})
-const Genre = mongoose.model("Genre", genreSchema)
-
-router.get("/", (request, response) => {
-	getGenres()
-		.then((genres) => {
-			response.send({
-				status: 200,
-				message: "Fetched genres successfully",
-				customers: genres,
-			})
+	const result = await genre.save()
+	if (result) {
+		response.status(200).send({
+			status: 200,
+			message: "Created genre successfully",
+			genre: result,
 		})
-		.catch((error) => {
-			response.send(error)
+	} else {
+		response.status(400).send({
+			status: 400,
+			message: "Failed to create Genre",
 		})
-})
-router.post("/", (request, response) => {
-	createGenre(request.body)
-		.then((genres) => {
-			response.send({
-				status: 200,
-				message: "Created genre successfully",
-				genres: genres,
-			})
-		})
-		.catch((error) => {
-			response.send(error)
-		})
-})
-router.patch("/:id", (request, response) => {
-	updateGenre(request.params.id, request.body)
-		.then((genres) => {
-			response.send({
-				status: 200,
-				message: "Updated genre successfully",
-				genres: genres,
-			})
-		})
-		.catch((error) => {
-			response.send(error)
-		})
+	}
 })
 
-router.delete("/:id", (request, response) => {
-	deleteGenre(request.params.id)
-		.then((genre) => {
-			response.send({
-				status: 200,
-				message: "Deleted genre successfully",
-				genre: genre,
-			})
+router.patch("/:id", auth, async (request, response) => {
+	const genre = await Genre.findByIdAndUpdate(
+		request.params.id,
+		{
+			$set: request.body,
+		},
+		{
+			new: true,
+		}
+	)
+	if (genre) {
+		response.status(200).send({
+			status: 200,
+			message: "Updated genre successfully",
+			genre: genre,
 		})
-		.catch((error) => {
-			response.send(error)
+	} else {
+		response.status(400).send({
+			status: 400,
+			message: "Failed to update genre",
 		})
+	}
 })
 
-async function getGenres() {
-	try {
-		const genres = await Genre.find()
-		if (genres.length) {
-			return Promise.resolve(genres)
-		} else {
-			return Promise.reject(new Error("No genres found"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-async function createGenre(body) {
-	try {
-		const newGenre = Genre({
-			name: body.name,
-			description: body.description,
+router.delete("/:id", auth, async (request, response) => {
+	const genre = await Genre.findByIdAndDelete(request.params.id)
+	if (genre) {
+		response.status(200).send({
+			status: 200,
+			message: "Deleted genre successfully",
+			genre: genre,
 		})
-		const result = await newGenre.save()
-		if (result) {
-			return Promise.resolve(result)
-		} else {
-			return Promise.reject(new Error("Failed to create Genre"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
+	} else {
+		response.status(400).send({
+			status: 400,
+			message: "Failed to delete genre",
+		})
 	}
-}
-async function updateGenre(id, body) {
-	try {
-		const genre = await Genre.findByIdAndUpdate(
-			id,
-			{
-				$set: body,
-			},
-			{
-				new: true,
-			}
-		)
-		if (genre) {
-			return Promise.resolve(genre)
-		} else {
-			return Promise.reject(new Error("Failed to update Genre"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-async function deleteGenre(id) {
-	try {
-		const genre = await Genre.findByIdAndDelete(id)
-		if (genre) {
-			return Promise.resolve(genre)
-		} else {
-			return Promise.reject(new Error("Failed to delete Genre"))
-		}
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
+})
 
 module.exports = router
