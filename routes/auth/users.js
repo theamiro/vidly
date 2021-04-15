@@ -1,3 +1,4 @@
+const auth = require("../../middleware/auth")
 const _ = require("lodash")
 const express = require("express")
 const router = express.Router()
@@ -26,7 +27,24 @@ router.get("/", async (request, response) => {
 	}
 })
 
-router.get("/:id", async (request, response) => {
+router.get("/me", auth, async (request, response) => {
+	debug(request.user)
+	const user = await User.findById(request.user._id)
+	if (user) {
+		response.status(200).send({
+			status: 200,
+			message: "User found",
+			user: _.pick(user, ["_id", "name", "email"]),
+		})
+	} else {
+		response.status(404).send({
+			status: 404,
+			message: "User could not be found",
+		})
+	}
+})
+
+router.get("/:id", auth, async (request, response) => {
 	const user = await User.findById(request.params.id)
 	if (user) {
 		response.status(200).send({

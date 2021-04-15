@@ -2,6 +2,7 @@ const express = require("express")
 const router = express.Router()
 const debug = require("debug")("app:startup")
 const Genre = require("../models/Genre")
+const auth = require("../middleware/auth")
 
 router.use(express.json())
 
@@ -37,7 +38,7 @@ router.get("/:id", async (request, response) => {
 	}
 })
 
-router.post("/", async (request, response) => {
+router.post("/", auth, async (request, response) => {
 	var genre = await Genre.findOne({name: request.body.name})
 	if (genre) {
 		return response.status(400).send({
@@ -64,7 +65,7 @@ router.post("/", async (request, response) => {
 	}
 })
 
-router.patch("/:id", async (request, response) => {
+router.patch("/:id", auth, async (request, response) => {
 	const genre = await Genre.findByIdAndUpdate(
 		request.params.id,
 		{
@@ -88,7 +89,7 @@ router.patch("/:id", async (request, response) => {
 	}
 })
 
-router.delete("/:id", async (request, response) => {
+router.delete("/:id", auth, async (request, response) => {
 	const genre = await Genre.findByIdAndDelete(request.params.id)
 	if (genre) {
 		response.status(200).send({
