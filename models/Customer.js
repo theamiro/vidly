@@ -1,5 +1,5 @@
 const mongoose = require("mongoose")
-const {Schema} = mongoose
+const {Schema, model} = mongoose
 
 const customerSchema = Schema({
 	name: {
@@ -19,7 +19,7 @@ const customerSchema = Schema({
 	},
 })
 
-const Customer = mongoose.model("Customer", customerSchema)
+const Customer = model("Customer", customerSchema)
 
 module.exports = Customer
 module.exports.customerSchema = customerSchema

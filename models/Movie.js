@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 const {genreSchema} = require("./Genre")
-const {Schema} = mongoose
+const {Schema, model} = mongoose
 
 const movieSchema = Schema({
 	title: {
@@ -25,7 +25,7 @@ const movieSchema = Schema({
 		min: 1,
 	},
 })
-const Movie = mongoose.model("Movie", movieSchema)
+const Movie = model("Movie", movieSchema)
 
 module.exports = Movie
 module.exports.movieSchema = movieSchema

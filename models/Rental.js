@@ -1,5 +1,5 @@
 const mongoose = require("mongoose")
-const {Schema} = mongoose
+const {Schema, model} = mongoose
 
 const rentalSchema = Schema({
 	customer: {
@@ -55,7 +55,7 @@ const rentalSchema = Schema({
 	},
 })
 
-const Rental = mongoose.model("Rental", rentalSchema)
+const Rental = model("Rental", rentalSchema)
 
 module.exports = Rental
 module.exports.rentalSchema = rentalSchema
