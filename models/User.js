@@ -20,11 +20,27 @@ const userSchema = Schema({
 		type: String,
 		required: true,
 	},
+	isAdmin: {
+		type: Boolean,
+	},
+})
+
+userSchema.virtual("id").get(function () {
+	return this._id.toHexString()
+})
+
+userSchema.set("toJSON", {
+	virtuals: true,
 })
 
 userSchema.methods.generateAuthToken = function () {
 	return jwt.sign(
-		{_id: this.id, name: this.name, email: this.email},
+		{
+			id: this.id,
+			name: this.name,
+			email: this.email,
+			isAdmin: this.isAdmin,
+		},
 		process.env.SECRET_KEY
 	)
 }

@@ -1,4 +1,5 @@
 const auth = require("../../middleware/auth")
+const isAdmin = require("../../middleware/admin")
 const _ = require("lodash")
 const express = require("express")
 const router = express.Router()
@@ -8,7 +9,7 @@ const bcrypt = require("bcrypt")
 
 router.use(express.json())
 
-router.get("/", async (request, response) => {
+router.get("/", [auth, isAdmin], async (request, response) => {
 	const users = await User.find()
 	if (users.length) {
 		response.status(200).send({
@@ -16,7 +17,7 @@ router.get("/", async (request, response) => {
 			message: "Users found",
 			users: _.map(
 				users,
-				_.partialRight(_.pick, ["_id", "name", "email"])
+				_.partialRight(_.pick, ["id", "name", "email"])
 			),
 		})
 	} else {
@@ -29,12 +30,12 @@ router.get("/", async (request, response) => {
 
 router.get("/me", auth, async (request, response) => {
 	debug(request.user)
-	const user = await User.findById(request.user._id)
+	const user = await User.findById(request.user.id)
 	if (user) {
 		response.status(200).send({
-			status: 200,
+			status: "200",
 			message: "User found",
-			user: _.pick(user, ["_id", "name", "email"]),
+			user: _.pick(user, ["id", "name", "email"]),
 		})
 	} else {
 		response.status(404).send({
@@ -50,7 +51,7 @@ router.get("/:id", auth, async (request, response) => {
 		response.status(200).send({
 			status: 200,
 			message: "User found",
-			user: _.pick(user, ["_id", "name", "email"]),
+			user: _.pick(user, ["id", "name", "email"]),
 		})
 	} else {
 		response.status(404).send({
@@ -84,7 +85,7 @@ router.post("/", async (request, response) => {
 			.send({
 				status: 201,
 				message: "User created successfully",
-				user: _.pick(result, ["_id", "name", "email"]),
+				user: _.pick(result, ["id", "name", "email"]),
 			})
 	} else {
 		response.status(500).send({
