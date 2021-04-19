@@ -1,3 +1,4 @@
+const _ = require("lodash")
 const express = require("express")
 const router = express.Router()
 const debug = require("debug")("app:startup")
@@ -12,7 +13,10 @@ router.get("/", async (request, response) => {
 		response.status(200).send({
 			status: 200,
 			message: "Genres found",
-			genres: genres,
+			genres: _.map(
+				genres,
+				_.partialRight(_.pick, ["id", "name", "description", "links"])
+			),
 		})
 	} else {
 		response.status(404).send({
@@ -79,7 +83,7 @@ router.patch("/:id", auth, async (request, response) => {
 		response.status(200).send({
 			status: 200,
 			message: "Updated genre successfully",
-			genre: genre,
+			genre: _.pick(genre, ["name", "description", "links"]),
 		})
 	} else {
 		response.status(400).send({
